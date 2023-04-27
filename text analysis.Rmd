@@ -18,4 +18,58 @@ library(textdata)
 #read in data
 opinions <- read_csv("data/opinions.csv")
 ```
+```{r}
+#categorizing article titles by topic 
+Title = opinions %>% select("Title")
+all_words_in_titles <- Title %>%
+  unnest_tokens(output = word, input = Title)
+
+policy <- all_words_in_titles %>% filter(word == "aas" | word == "requirements" | word == "Attendance"| word == "curriculum"| word == "constitution"| word == "j-term"| word == "mask"| word == "class"| word == "covid")
+
+finances <- all_words_in_titles %>% filter(word == "aid" | word == "tuition"| word == "pay"| word == "money")
+
+health <- all_words_in_titles %>% filter(word == "illness" | word == "covid"| word == "health"| word == "ableism" | word == "cancer")
+
+cartoon <- all_words_in_titles %>% filter(word == "litterbug" | word == "punch")
+
+```
+```{r}
+#creating dataframe with number of articles per topic
+Title = opinions %>% select("Title")
+all_words_in_titles <- Title %>%
+  unnest_tokens(output = word, input = Title)
+
+topics <- c("policy", "health", "finances", "cartoon")
+count2 <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(cartoon)))
+title_topics <- data.frame(topics, count2)
+title_topics
+```
+```{r}
+Body = opinions %>% select("Body")
+all_words_in_body <- Body %>%
+  unnest_tokens(output = word, input = Body)
+
+data(stop_words)
+
+stop_words %>% 
+  count(lexicon)
+
+head(stop_words)
+body_words <- all_words_in_body %>% filter(word != "student"  & word!= "it’s") %>%
+  anti_join(stop_words, by="word")
+
+body_words %>%
+  count(word, sort = TRUE) %>% 
+  slice(1:10) %>%
+  ggplot(aes(x = fct_reorder(word, n), y = n, color = word, fill = word)) +
+  geom_col() +
+  # Rotate graph
+  coord_flip() +
+  guides(color = "none", 
+         fill = "none") +
+  labs(
+    x = NULL,
+    y = "Number of instances",
+    title = "The most common words in Amherst Student Articles")
+```
 
