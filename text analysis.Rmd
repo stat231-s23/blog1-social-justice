@@ -1,0 +1,21 @@
+---
+title: "Text Analysis of The Student Articles"
+author: "Anna Zhou and Julia Woodward"
+date: "\\today"
+output: pdf_document
+---
+
+```{r}
+#loading packages
+
+library(tidytext)
+library(tidyverse)
+library(wordcloud)
+library(textdata)
+```
+
+```{r}
+#read in data
+opinions <- read_csv("data/opinions.csv")
+```
+
