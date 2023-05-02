@@ -1,7 +1,7 @@
 ---
-title: "Your Project Title Here"
+title: "Decomposing Amherst Student Articles"
 author: "Anna Zhou and Julia Woodward"
-date: "Add a date"
+date: "May 2, 2023"
 output:
   rmdformats::readthedown:
     highlight: "kate"
@@ -16,13 +16,20 @@ knitr::opts_chunk$set(echo = FALSE)
 options(knitr.kable.NA = '')
 
 # Load packages
+library(tidytext)
 library(tidyverse)
+library(wordcloud)
+library(textdata)
+library(ggplot2)
+library(scales)
 
 ```
 
 # Intro
 
 This is an R Markdown blog template. This document will be knit to HTML to produce a webpage that will be hosted publicly via GitHub.
+
+Amherst students have a wide range of interests, hobbies, and experiences. With a student body of only 1600, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities of the student body? To answer these questions, we analyzed 100 articles from the opinion section of the Student, the student magazine at Amherst College. The opinion section spans a large pool of topics, from health, to policy, to politics. We looked at the breakdown of these articles by topic, as well as the most common words and phrases referenced by these articles. We grouped articles by sentiment and emotion, and noticed changes in these areas over the past 8 months. 
 
 ## Website publication work flow
 
@@ -38,6 +45,33 @@ This is an R Markdown blog template. This document will be knit to HTML to produ
 You can include text, `code`, and output as usual. Remember to take full advantage of Markdown and follow our [Style Guide](https://acstat231-f22.github.io/home/style-guide.html#Text_narration).
 
 ```{r ggplot-example, fig.align="left", out.width="100%"}
+opinions <- read_csv("data/opinions.csv")
+Title = opinions %>% select("Title")
+all_words_in_titles <- Title %>%
+  unnest_tokens(output = word, input = Title)
+
+policy <- all_words_in_titles %>% filter(word == "AAS" | word == "requirements" | word == "attendance"| word == "curriculum"| word == "constitution"| word == "j-term"| word == "mask"| word == "class"| word == "covid" | word == "space" | word == "policies" | word == "haven")
+
+finances <- all_words_in_titles %>% filter(word == "aid" | word == "tuition"| word == "pay"| word == "money" | word == "fee" | word == "financial")
+
+health <- all_words_in_titles %>% filter(word == "illness" | word == "health"| word == "ableism" | word == "cancer" | word == "pandemic" | word == "mask" | word == "bruce")
+
+politics <- all_words_in_titles %>% filter(word == "macro-" | word == "tragedy" | word == "columbus" | word == "israel" | word == "insider" | word == "discourse")
+
+sports <- all_words_in_titles %>% filter(word == "bruce" | word == "badminton")
+
+topics <- c("policy", "health", "finances", "politics", "sports")
+count <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)), as.numeric(count(sports)))
+title_topics <- data.frame(topics, count)
+title_topics
+
+ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = topics)) + 
+  geom_col() + 
+  labs(
+    x = "Topics",
+    y = "Number of articles",
+    title = "Categorizing The Student articles by Title")
+
 ggplot(data = cars, aes(x = speed, y = dist)) + 
   geom_point() + 
   labs(x = "Speed of car (mph)",
