@@ -121,6 +121,7 @@ x = NULL,
 
 ```
 
+
 ```{r}
 #creating word cloud
 
@@ -158,6 +159,8 @@ opinion_word_freqs %>%
 #### AFINN Lexicon
 
 ```{r}
+afinn_lexicon <- get_sentiments("afinn")
+
 #creating dataset using afinn lexicon grouped by date
 opinion_afinn <- opinions %>%
   unnest_tokens(word, Body) %>%
@@ -189,9 +192,128 @@ opinion_narrative <- opinion_afinn %>%
   
 ggplot(opinion_narrative, aes(x = Date, y = sentiment)) + 
   geom_point() + 
-  scale_x_date(breaks = "month") +
+  scale_x_date(breaks = date_breaks("months"), labels = date_format("%B")) +
   geom_smooth() +  
-  labs(title = "Sentiment in The Student Over Time by Issue Release Date", subtitle = ("9/14/2022 - 4/26/2023")) 
+  labs(title = "Sentiment in The Student Over Time by Issue Release Date Using AFINN Lexicon", subtitle = ("9/14/2022 - 4/26/2023")) 
+```
+
+```{r}
+# overall sentiment score
+opinion_afinn %>%
+  summarize(total_score = sum(value))
+
+# by article
+afinn_byarticles <- opinion_afinn %>%
+  group_by(Title) %>%
+  summarize(article_score = sum(value))
+ggplot(data = afinn_byarticles, aes(x = article_score)) +
+  geom_density(color="#AF7AC5", fill="#AF7AC5", alpha = 0.5) +
+  theme_classic() +
+  labs(title = "Total Article Sentiment Score based on AFINN Lexicon", x = "Article Sentiment Score")
+```
+
+
+```{r}
+# overall favstats by article -- median of 29 is positive
+mosaic::favstats(~article_score, data=afinn_byarticles)
+```
+
+```{r}
+#AFINN sentiment for articles about Amherst policies
+
+policy_words <- opinions %>%
+  filter(str_detect(str_to_lower(Title), "policy|policies|financial aid|curriculum|case|fee|requirements|tuition|ableism")) %>%
+  unnest_tokens(output=word, input=Body, token="words") %>%
+  anti_join(stop_words, by="word") %>%
+  inner_join(afinn_lexicon, by="word") %>%
+  group_by(Title) %>%
+  mutate(seq=row_number())
+
+ggplot(policy_words, aes(x=seq, y=value)) +
+  geom_line() +
+  geom_hline(yintercept=0, lty="dashed", color="red") +
+  facet_wrap(~Title, labeller = labeller(Title = label_wrap_gen(width = 23))) +
+  labs(x="Order", y="AFINN Sentiment")
 ```
 
 #### NRC Lexicon
+
+```{r}
+nrc_lexicon <- get_sentiments("nrc")
+
+# identify words in word_frequencies dataset (which has stop words removed) that are not in the lexicon
+nrc_missed_words <- opinion_word_freqs %>%
+  anti_join(nrc_lexicon, by = "word")
+
+# proportion missed
+nrow(nrc_missed_words)/nrow(opinion_word_freqs)
+```
+
+Beware -- over 79% of the words in the Amherst Student articles are not found in the nrc lexicon.
+
+```{r}
+#top words by sentiment
+nrc_opinions <- opinion_word_freqs %>%
+  inner_join(nrc_lexicon, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative", "anger", "disgust"
+                          , "joy", "sadness")) %>%
+  arrange(sentiment, desc(n)) %>%
+  group_by(sentiment) %>%
+  slice(1:10)
+
+#plotting top 10 words under each sentiment
+ggplot(data=nrc_opinions, aes(x = reorder(word,n), y = n, fill = as.factor(n))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "Frequency") +
+  facet_wrap(~ sentiment, ncol = 2, scales = "free") +
+  coord_flip()
+```
+
+
+
+```{r}
+
+opinions_nrc <- opinions %>%
+  unnest_tokens(word, Body) %>%
+  #removing most common irrelevant/incorrectly classified words
+  filter(word != "liberal" & word != "rail" & word != "anonymous" & word != "pay" & word != "president" & word != "question" & word != "library") %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  inner_join(get_sentiments("nrc"), multiple = "all")
+
+#creating dataset with top30 most frequent words classified as negative
+nrc_negative <- get_sentiments("nrc") %>% 
+  filter(sentiment == "negative")
+
+opinions_neg <- opinions_nrc %>%
+  inner_join(nrc_negative) %>%
+  count(word, sort = TRUE) %>%
+  slice(1:30)
+
+#creating dataset with top30 most frequent words classified as positive
+nrc_positive <- get_sentiments("nrc") %>% 
+  filter(sentiment == "positive")
+
+opinions_pos <- opinions_nrc %>%
+  inner_join(nrc_positive) %>%
+  count(word, sort = TRUE) %>%
+  slice(1:30)
+```
+
+```{r}
+#table of top 30 "negative" words
+
+kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'negative' in NRC lexicon by frequency") %>%
+  kable_styling(font_size = 8) %>%
+  row_spec(0,bold=TRUE) 
+```
+
+```{r}
+#table of top 30 "positive" words
+
+kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
+  kable_styling(font_size = 8) %>%
+  row_spec(0,bold=TRUE) 
+```
+
+
+
