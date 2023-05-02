@@ -31,6 +31,11 @@ This is an R Markdown blog template. This document will be knit to HTML to produ
 
 Amherst students have a wide range of interests, hobbies, and experiences. With a student body of only 1600, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities of the student body? To answer these questions, we analyzed 100 articles from the opinion section of the Student, the student magazine at Amherst College. The opinion section spans a large pool of topics, from health, to policy, to politics. We looked at the breakdown of these articles by topic, as well as the most common words and phrases referenced by these articles. We grouped articles by sentiment and emotion, and noticed changes in these areas over the past 8 months. 
 
+```{r, fig.cap='"Safe Space" by artist Kenesha Sneed', out.width="80%", fig.align="center"}
+knitr::include_graphics("https://image.isu.pub/230412084223-d3c31359d0485a97f70dadb4de02bfed/jpg/page_1_thumb_large.jpg")
+```
+
+
 ## Website publication work flow
 
 1. Edit Rmd
@@ -40,9 +45,13 @@ Amherst students have a wide range of interests, hobbies, and experiences. With 
 3. Commit and push changes when you are ready. The website may take a couple minutes to update automatically after the push, but you may need to clear your browser's cache or view the page in a private/incognito window to see the changes more quickly. 
 
 
-# Content
+# Categorizing by Topic
 
 You can include text, `code`, and output as usual. Remember to take full advantage of Markdown and follow our [Style Guide](https://acstat231-f22.github.io/home/style-guide.html#Text_narration).
+
+Our dataset includes 100 articles from the Student, ranging from September 2022 to April 2023. We categorized each article by topic by looking at key words in each title. For example, the "health" category groups articles together that have the words "illness", "health", "ableism", "cancer", or "pandemic" in their title. The "policy" category groups articles that address some college policy, whether it be the open curriculum, the structure of the AAS, or J-term classes, to name a few. We observe that around 10% of the articles address college policy and 10% address politics. Articles about policy and politics are around twice as common as articles about health or finances. Articles about sports are very few, due to there being a separate sports section of the magazine. 
+
+These topics are not mutually exclusive; for example, an article about the college's response to covid would be grouped under both "policy" and "health". 
 
 ```{r ggplot-example, fig.align="left", out.width="100%"}
 opinions <- read_csv("data/opinions.csv")
@@ -85,7 +94,11 @@ Examples and additional guidance are provided below.
 
 Take note of the the default code chunk options in the `setup` code chunk. For example, unlike the rest of the Rmd files we worked in this semester, the default code chunk option is `echo = FALSE`, so you will need to set `echo  = TRUE` for any code chunks you would like to display in the blog. You should be thoughtful and intentional about the code you choose to display. 
 
+## Word and Phrase Frequency
 
+# Categorizing by Sentiment and Emotion
+## AFINN Lexicon
+## NRC Lexicon 
 ## Links 
 
 You can include [links](https://www.datadreaming.org/post/r-markdown-theme-gallery/) using Markdown syntax as shown. 

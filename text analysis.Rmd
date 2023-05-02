@@ -33,22 +33,28 @@ policy <- all_words_in_titles %>% filter(word == "AAS" | word == "requirements" 
 
 finances <- all_words_in_titles %>% filter(word == "aid" | word == "tuition"| word == "pay"| word == "money" | word == "fee" | word == "financial")
 
-health <- all_words_in_titles %>% filter(word == "illness" | word == "health"| word == "ableism" | word == "cancer" | word == "pandemic" | word == "mask")
+health <- all_words_in_titles %>% filter(word == "illness" | word == "health"| word == "ableism" | word == "cancer" | word == "pandemic" | word == "mask" | word == "bruce")
 
 politics <- all_words_in_titles %>% filter(word == "macro-" | word == "tragedy" | word == "columbus" | word == "israel" | word == "insider" | word == "discourse")
+
+sports <- all_words_in_titles %>% filter(word == "bruce" | word == "badminton")
 
 ```
 
 ```{r}
 #creating dataframe with number of articles per topic
-Title = opinions %>% select("Title")
-all_words_in_titles <- Title %>%
-  unnest_tokens(output = word, input = Title)
 
-topics <- c("policy", "health", "finances", "politics")
-count2 <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)))
-title_topics <- data.frame(topics, count2)
+topics <- c("policy", "health", "finances", "politics", "sports")
+count <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)), as.numeric(count(sports)))
+title_topics <- data.frame(topics, count)
 title_topics
+
+ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = topics)) + 
+  geom_col() + 
+  labs(
+    x = "Topics",
+    y = "Number of articles",
+    title = "Categorizing The Student articles by Title")
 ```
 
 ## Term Frequency
