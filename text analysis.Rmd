@@ -1,5 +1,5 @@
 ---
-title: "Text Analysis of The Student Articles"
+title: "Text Analysis of The Amherst Student Articles"
 author: "Anna Zhou and Julia Woodward"
 date: "\\today"
 output: pdf_document
@@ -12,40 +12,51 @@ library(tidytext)
 library(tidyverse)
 library(wordcloud)
 library(textdata)
+library(ggplot2)
+library(scales)
 ```
 
 ```{r}
 #read in data
 opinions <- read_csv("data/opinions.csv")
 ```
+
+## **Categorizing Titles**
+
 ```{r}
 #categorizing article titles by topic 
 Title = opinions %>% select("Title")
 all_words_in_titles <- Title %>%
   unnest_tokens(output = word, input = Title)
 
-policy <- all_words_in_titles %>% filter(word == "aas" | word == "requirements" | word == "Attendance"| word == "curriculum"| word == "constitution"| word == "j-term"| word == "mask"| word == "class"| word == "covid")
+policy <- all_words_in_titles %>% filter(word == "AAS" | word == "requirements" | word == "attendance"| word == "curriculum"| word == "constitution"| word == "j-term"| word == "mask"| word == "class"| word == "covid" | word == "space" | word == "policies" | word == "haven")
 
-finances <- all_words_in_titles %>% filter(word == "aid" | word == "tuition"| word == "pay"| word == "money")
+finances <- all_words_in_titles %>% filter(word == "aid" | word == "tuition"| word == "pay"| word == "money" | word == "fee" | word == "financial")
 
-health <- all_words_in_titles %>% filter(word == "illness" | word == "covid"| word == "health"| word == "ableism" | word == "cancer")
+health <- all_words_in_titles %>% filter(word == "illness" | word == "health"| word == "ableism" | word == "cancer" | word == "pandemic" | word == "mask")
 
-cartoon <- all_words_in_titles %>% filter(word == "litterbug" | word == "punch")
+politics <- all_words_in_titles %>% filter(word == "macro-" | word == "tragedy" | word == "columbus" | word == "israel" | word == "insider" | word == "discourse")
 
 ```
+
 ```{r}
 #creating dataframe with number of articles per topic
 Title = opinions %>% select("Title")
 all_words_in_titles <- Title %>%
   unnest_tokens(output = word, input = Title)
 
-topics <- c("policy", "health", "finances", "cartoon")
-count2 <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(cartoon)))
+topics <- c("policy", "health", "finances", "politics")
+count2 <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)))
 title_topics <- data.frame(topics, count2)
 title_topics
 ```
+
+## Term Frequency
+
 ```{r}
+#finding most common terms in the body section
 Body = opinions %>% select("Body")
+
 all_words_in_body <- Body %>%
   unnest_tokens(output = word, input = Body)
 
@@ -55,7 +66,8 @@ stop_words %>%
   count(lexicon)
 
 head(stop_words)
-body_words <- all_words_in_body %>% filter(word != "student"  & word!= "it’s") %>%
+body_words <- all_words_in_body %>% 
+  filter(word != "student"  & word!= "it’s") %>%
   anti_join(stop_words, by="word")
 
 body_words %>%
@@ -70,6 +82,110 @@ body_words %>%
   labs(
     x = NULL,
     y = "Number of instances",
-    title = "The most common words in Amherst Student Articles")
+    title = "The most common words in Amherst Student Opinion Articles")
 ```
 
+```{r}
+#finding most common bigrams (2-term phrases)
+#creating bigram token 
+opinions_bigrams <- Body %>%
+  unnest_tokens(output = bigram, input = Body, token = "ngrams", n = 2)
+
+opinions_bigrams_clean <- opinions_bigrams %>%
+  separate(col="bigram", into=c("word1", "word2"), sep=" ", remove=FALSE) %>%
+  anti_join(stop_words, by=c("word1"="word")) %>%
+  anti_join(stop_words, by=c("word2"="word")) %>%
+  filter(!is.na(bigram)) %>%
+  #removing irrelevant/uninformative bigrams
+  filter((!grepl("amherst|editorial board|email protected|articles comment|emailing email", bigram))) %>%
+  count(bigram, sort = TRUE) %>%
+  slice(1:10)
+
+#plotting most common bigrams
+ggplot(opinions_bigrams_clean, aes(x = fct_reorder(bigram, n), y = n
+                                , color = bigram, fill = bigram)) +
+geom_col() +
+# Rotate graph 
+  coord_flip() + guides(color = "none",
+         fill = "none") +
+  labs(
+x = NULL,
+    y = "Number of instances",
+    title = "Most common bigrams in Amherst Student Opinion articles")
+
+```
+
+```{r}
+#creating word cloud
+
+opinion_word_freqs <- opinions %>%
+  unnest_tokens(output = word, input = Body) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(word != "student" & word != "it’s" & word != "i’m" & word != "don’t" & word != "i’ve") %>%
+  count(word, sort = TRUE)
+
+#setting seed for reproducibility
+set.seed(100)
+
+#choosing color palette
+my_palette <- brewer.pal(10, "Dark2")
+
+opinion_word_freqs %>%
+  with(wordcloud(words = word,
+      freq = n,
+      min.freq = 20,
+      max.words = 50,
+    # Plot the words in a random order
+      random.order = TRUE,
+    # Specify the range of the size of the words
+      scale = c(2, 0.3),
+# Specify proportion of words with 90 degree rotation 
+      rot.per = 0.15,
+# Color words from least to most frequent
+      colors = my_palette,
+# Change font family
+      family = "sans"))
+```
+
+## Sentiment Analysis
+
+#### AFINN Lexicon
+
+```{r}
+#creating dataset using afinn lexicon grouped by date
+opinion_afinn <- opinions %>%
+  unnest_tokens(word, Body) %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  inner_join(get_sentiments("afinn"))
+
+#getting word count for each sentiment value (-5 to 5)
+opinion_afinn_count <- opinion_afinn %>%
+  count(value)
+
+#displaying table
+kable(opinion_afinn_count)
+
+#displaying barplot
+ggplot(opinion_afinn_count, aes(x = value, y = n, fill = value)) +
+  geom_col() +
+  labs(
+    x = "Sentiment",
+    y = "Number of words in Student Opinion Articles",
+    title = "Sentiment value according to AFINN Lexicon") 
+```
+
+
+```{r}
+#plotting graph of sentiment in articles over time
+opinion_narrative <- opinion_afinn %>%
+  group_by(Date) %>%
+  summarize(sentiment = sum(value))
+  
+ggplot(opinion_narrative, aes(x = Date, y = sentiment)) + 
+  geom_point() + 
+  scale_x_date(breaks = "month") +
+  geom_smooth() +  
+  labs(title = "Sentiment in The Student Over Time by Issue Release Date", subtitle = ("9/14/2022 - 4/26/2023")) 
+```
+
+#### NRC Lexicon
