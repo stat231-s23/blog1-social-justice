@@ -54,7 +54,7 @@ ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = top
   labs(
     x = "Topics",
     y = "Number of articles",
-    title = "Categorizing The Student articles by Title")
+    title = "Categorizing The Student Article Titles by Topic")
 ```
 
 ## Term Frequency
@@ -128,6 +128,7 @@ x = NULL,
 opinion_word_freqs <- opinions %>%
   unnest_tokens(output = word, input = Body) %>%
   anti_join(stop_words, by = "word") %>%
+  #filtering out irrelevant words
   filter(word != "student" & word != "it’s" & word != "i’m" & word != "don’t" & word != "i’ve") %>%
   count(word, sort = TRUE)
 
@@ -173,7 +174,10 @@ opinion_afinn_count <- opinion_afinn %>%
 
 #displaying table
 kable(opinion_afinn_count)
+```
 
+
+```{r}
 #displaying barplot
 ggplot(opinion_afinn_count, aes(x = value, y = n, fill = value)) +
   geom_col() +
@@ -236,6 +240,28 @@ ggplot(policy_words, aes(x=seq, y=value)) +
   labs(x="Order", y="AFINN Sentiment")
 ```
 
+```{r}
+# non-stop words not in AFINN
+opinions %>%
+  filter(str_detect(str_to_lower(Title), "policy|policies|financial aid|curriculum|case|fee|requirements|tuition|ableism")) %>%
+  unnest_tokens(output=word, input=Body, token="words") %>%
+  anti_join(stop_words, by="word") %>%
+  nrow()
+```
+
+```{r}
+opinions %>%
+  filter(str_detect(str_to_lower(Title), "policy|policies|financial aid|curriculum|case|fee|requirements|tuition|ableism")) %>%
+  unnest_tokens(output=word, input=Body, token="words") %>%
+  anti_join(stop_words, by="word") %>%
+  anti_join(afinn_lexicon, by="word") %>%
+  nrow()
+```
+
+```{r}
+4318/4741
+```
+
 #### NRC Lexicon
 
 ```{r}
@@ -280,27 +306,27 @@ opinions_nrc <- opinions %>%
   anti_join(get_stopwords(), by = "word") %>%
   inner_join(get_sentiments("nrc"), multiple = "all")
 
-#creating dataset with top30 most frequent words classified as negative
+#creating dataset with top15 most frequent words classified as negative
 nrc_negative <- get_sentiments("nrc") %>% 
   filter(sentiment == "negative")
 
 opinions_neg <- opinions_nrc %>%
   inner_join(nrc_negative) %>%
   count(word, sort = TRUE) %>%
-  slice(1:30)
+  slice(1:15)
 
-#creating dataset with top30 most frequent words classified as positive
+#creating dataset with top15 most frequent words classified as positive
 nrc_positive <- get_sentiments("nrc") %>% 
   filter(sentiment == "positive")
 
 opinions_pos <- opinions_nrc %>%
   inner_join(nrc_positive) %>%
   count(word, sort = TRUE) %>%
-  slice(1:30)
+  slice(1:15)
 ```
 
 ```{r}
-#table of top 30 "negative" words
+#table of top 15 "negative" words
 
 kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'negative' in NRC lexicon by frequency") %>%
   kable_styling(font_size = 8) %>%
@@ -308,7 +334,7 @@ kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 30 Words 
 ```
 
 ```{r}
-#table of top 30 "positive" words
+#table of top 15 "positive" words
 
 kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
   kable_styling(font_size = 8) %>%

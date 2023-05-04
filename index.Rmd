@@ -1,5 +1,5 @@
 ---
-title: "Decomposing Amherst Student Articles"
+title: "Performing Text Analysis on Amherst Student Opinion Articles"
 author: "Anna Zhou and Julia Woodward"
 date: "May 2, 2023"
 output:
@@ -26,22 +26,22 @@ library(scales)
 library(kableExtra)
 ```
 
-# Intro
+# Introduction
 
-Amherst students have a wide range of interests, hobbies, and experiences. With a student body of only 1600, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities of the student body? To answer these questions, we analyzed 100 articles from the opinion section of [The Student](https://www.amherststudent.com/), the student magazine at Amherst College. The opinion section spans a large pool of topics, from health, to policy, to politics. We looked at the breakdown of these articles by subject matter, as well as the most common words and phrases referenced by these articles. We grouped articles by sentiment and emotion, and noticed changes in these areas over the past 8 months. 
+Amherst students have a wide range of interests, hobbies, and experiences. With a student body of less than 2,000, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities and concerns of the student body? To answer these questions, we analyzed all 76 articles published this school year in the Opinion section of [The Student](https://www.amherststudent.com/), the main student-run magazine at Amherst College. 
+
+The Opinion section spans a large pool of topics, from health, to college policies, to politics. After scraping the text from the Amherst Student Opinion articles webpage and filtering out the illustrations/cartoons, we looked at the breakdown of these articles by subject matter in the headlines, as well as the most common words and phrases referenced in the article bodies. We performed sentiment analysis using both AFINN and NRC lexicons and examined changes in emotion and topics over the past nine months of the school year. 
 
 ```{r, fig.cap='Two issues of the Amherst Student from January 1960 (right) and April 2023 (left)', out.width="100%", fig.align="center"}
 knitr::include_graphics("img/amherst_student.jpg")
 ```
 
 
-
-
 # Categorizing by Topic
 
-Our dataset includes 100 articles from the Student, ranging from September 2022 to April 2023. We categorized each article by topic by looking at key words in each title. For example, the "health" category groups articles together that have the words "illness", "health", "ableism", "cancer", or "pandemic" in their title. The "policy" category groups articles that address some college policy, whether it be the open curriculum, the structure of the AAS, or J-term classes, to name a few. We observe that around 10% of the articles address college policy and 10% address politics. Furthermore, articles about policy and politics are around twice as common as articles about health or finances.
+Our dataset includes 76 articles from the Student, ranging from September 2022 to April 2023. We categorized each article by topic by looking at key words in each title. For example, the "health" category groups articles together that have the words "illness", "health", "ableism", "cancer", or "pandemic" in their title. The "policy" category groups articles that address some form of Amherst College policy, whether it be the open curriculum, the structure of the AAS, J-term classes, or the new Latin Honors requirements (a particularly popular one this semester), to name a few. We observe that around 15% (11/76) of the articles directly address college policy and 13% (10/76) directly address politics in their headlines. Furthermore, articles about policy and politics are around twice as common as articles about health or finances.
 
-These topics are not mutually exclusive; for example, an article about the college's response to covid would be grouped under both "policy" and "health". 
+These topics are not mutually exclusive; for example, an article about the college's response to COVID-19 would be grouped under both "policy" and "health". 
 
 ```{r ggplot-example, fig.align="left", out.width="100%"}
 opinions <- read_csv("data/opinions.csv", show_col_types = FALSE)
@@ -70,14 +70,15 @@ ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = top
   labs(
     x = "Topics",
     y = "Number of articles",
-    title = "Categorizing The Student articles by Title")
+    subtitle = "September 2022 to April 2023",
+    title = "Categorizing The Student Article Titles by Topic")
 
 ```
 
 
 ## Word and Phrase Frequency
 
-What words and phrases are most common in the articles? We can plot the frequency of the most common words in the article bodies, after filtering out the stop-words (as, is, the, etc). "Student/s" and "Amherst" come out on top by a wide margin - no surprises there! "Student" is mentioned almost 400 times in just 100 articles. Other commonly appearing words are "time", "campus", and "college". 
+What words and phrases are most common in the Opinion articles from The Student? We can plot the frequency of the most common words in the article bodies, after filtering out the stop-words (as, is, the, etc). "Student/s" and "Amherst" come out on top by a wide margin - no surprises there! "Student" is mentioned almost 400 times in just 100 articles. Other commonly appearing words are "time", "campus", and "college". 
 ```{r}
 #finding most common terms in the body section
 Body = opinions %>% select("Body")
@@ -102,10 +103,11 @@ body_words %>%
   labs(
     x = NULL,
     y = "Number of instances",
+    subtitle = "September 2022 to April 2023",
     title = "Most common words in Amherst Student Opinion Articles")
 ```
 
-```{r}
+```{r, fig.cap= 'Word cloud of the 50 most common words in The Student Opinion articles', out.width="100%", fig.align="center"}
 #creating word cloud
 
 opinion_word_freqs <- opinions %>%
@@ -137,7 +139,7 @@ opinion_word_freqs %>%
       family = "sans"))
 ```
 
-We also looked at the most common bigrams, or two word phrases, in the Student. The three most common bigrams are "Student body", "latin honors", and "mental health". This is in agreement with Figure 1, which illustrates that policy and health lie among the most common article topics. 
+We also looked at the most common bigrams, or two-word phrases, in the articles. The three most common bigrams are "Student body", "latin honors", and "mental health". This is in agreement with Figure 1, which illustrates that college community policies and health lie among the most common article topics that Amherst students feel most compelled to write about. In this past year in particular, changes to the Latin honors breadth requirement and its effect on Amherst's open curriculum were widely written about. Other timely article topics that we saw from our word cloud and the plot below included changes to the Association of Amherst Students (AAS) and the increased budgetary/financial limitations Amherst has experienced over the past semester. Also, related bigrams like "dining hall", "financial aid", and "western Massachusetts" appear to all be topics of relevance to the current Amherst student body.
 
 ```{r}
 #finding most common bigrams (2-term phrases)
@@ -170,11 +172,12 @@ x = NULL,
 
 # Categorizing by Sentiment and Emotion
 
-We also analyzed the overall sentiment of these articles, and how this has changed over time. Has student writing become more positive or negative over the past 9 months?
+We also analyzed the overall sentiment of these articles, and how this has changed over time. Has student writing in Amherst College's largest publication become more positive or negative over the past 9 months? What kind of words from the articles are classified as having more positive or negative, joyful or sad connotations? What does the overall sentiment of articles published in the Opinion section look like?
 
 ## AFINN Lexicon
 
-The AFINN Lexicon assigns each word or term a value, or "sentiment score" from -5 to 5, with 5 being the most positive. The table below shows that most terms in the articles are neutral to slightly positive.  
+The AFINN Lexicon assigns each word or term a value, or "sentiment score" from -5 to 5, with 5 being the most positive sentiment and -5 being the most negative sentiment. Scores with a greater magnitude indicate stronger sentiment. The table below shows that most terms in the articles are classified by the lexicon as neutral to slightly positive.  
+
 ```{r}
 afinn_lexicon <- get_sentiments("afinn")
 
@@ -199,7 +202,27 @@ ggplot(opinion_afinn_count, aes(x = value, y = n, fill = value)) +
     y = "Number of words in Student Opinion Articles",
     title = "Sentiment value according to AFINN Lexicon")
 ```
-Over time, there appears to be no drastic change in overall sentiment. Overall sentiment peaked at the end of the fall semester in December, which had sentiment scores of around 300. During the Spring semester, however, the sentiment seemed to be growing more negative. Of course, more significant conclusions would require a much larger dataset.
+
+
+Below, we grouped the sentiment scores by article. The table reveals that the median score of 29 reveals that the average sentiment of the Opinion articles is generally neutral to positive, with a quarter of articles having total sentiment scores of 8.75 or below (slightly positive to negative)and a quarter having scores of 76 or above (positive to very positive). The article with the most negative sentiment of -91 is titled "Under the Rubble: A Tragedy Reveals Cultural Bias" and discusses Amherst's failure to address and provide support for the February 2023 earthquakes in Syria and  Türkiye. The article with the most positive sentiment score of 132 is titled "Val for Pal: How To Maintain Your Long-distance Friendship" and offers advice on cultivating worldwide/long-distance friendships from the perspective of an international student. It seems like some particularly positive articles (sentiment >90) are driving the overall score to lean positive.
+
+```{r}
+# by article
+afinn_byarticles <- opinion_afinn %>%
+  group_by(Title) %>%
+  summarize(article_score = sum(value))
+ggplot(data = afinn_byarticles, aes(x = article_score)) +
+  geom_density(color="#AF7AC5", fill="#AF7AC5", alpha = 0.5) +
+  theme_classic() +
+  labs(title = "Distribution of Total Article Sentiment Scores based on AFINN Lexicon", x = "Article Sentiment Score")
+
+# overall favstats by article -- median of 29 is positive
+suppressMessages(kable(mosaic::favstats(~article_score, data=afinn_byarticles)))
+```
+
+
+The graph below plots article sentiment according to the AFINN lexicon over the duration of the school year by issue date. Over time, there appears to be no drastic change in overall sentiment. Overall sentiment peaked at the end of the fall semester in December, which had total sentiment scores across issues of around 300 with articles like "People Like You More Than You Think" (11/30/23) and "In Praise of the Jones Library" (12/7/23). During the Spring semester, however, the sentiment seemed to be growing more negative with articles like "ChatGPT’s Apocalypse Already Happened" (2/15/23 Issue) and "Strict Attendance Policies Do More Harm Than Good" (3/29/23 Issue). Of course, more significant conclusions would require a much larger dataset.
+
 ```{r}
 #plotting graph of sentiment in articles over time
 opinion_narrative <- opinion_afinn %>%
@@ -210,30 +233,14 @@ ggplot(opinion_narrative, aes(x = Date, y = sentiment)) +
   geom_point() + 
   scale_x_date(breaks = date_breaks("months"), labels = date_format("%B")) +
   geom_smooth(formula = y ~ x, method = "loess") +  
-  labs(title = "Sentiment in The Student Over Time by Issue Release Date Using AFINN Lexicon", subtitle = ("9/14/2022 - 4/26/2023"))
+  labs(x = "Issue Date",
+       y = "Total Sentiment Score for All Articles in Issue",
+       title = "Total Sentiment in The Student Over Time by Issue Release Date (AFINN)", subtitle = ("9/14/2022 - 4/26/2023"))
 ```
 
-```{r}
-# overall sentiment score
-kable(opinion_afinn %>%
-  summarize("total score" = sum(value)))
+Below, we plotted sentiment according to the AFINN lexicon in all 11 articles classified as addressing Amherst College policies. Overall, the sentiment of the classified words tends to fluctuate a lot even within the article itself. However, it is difficult to make generalizations because only 9% (423/4741) of words in the articles are actually recognized by the AFINN lexicon to classify sentiment.
 
-# by article
-afinn_byarticles <- opinion_afinn %>%
-  group_by(Title) %>%
-  summarize(article_score = sum(value))
-ggplot(data = afinn_byarticles, aes(x = article_score)) +
-  geom_density(color="#AF7AC5", fill="#AF7AC5", alpha = 0.5) +
-  theme_classic() +
-  labs(title = "Total Article Sentiment Score based on AFINN Lexicon", x = "Article Sentiment Score")
-```
-
-```{r}
-# overall favstats by article -- median of 29 is positive
-kable(mosaic::favstats(~article_score, data=afinn_byarticles))
-```
-
-```{r}
+```{r, out.width="100%"}
 #AFINN sentiment for articles about Amherst policies
 
 policy_words <- opinions %>%
@@ -248,26 +255,23 @@ ggplot(policy_words, aes(x=seq, y=value)) +
   geom_line() +
   geom_hline(yintercept=0, lty="dashed", color="red") +
   facet_wrap(~Title, labeller = labeller(Title = label_wrap_gen(width = 23))) +
-  labs(x="Order", y="AFINN Sentiment")
+  labs(x="Order", y="AFINN Sentiment", title = "Sentiment in Opinion Articles About Amherst Policies")
+
+
 ```
+
 
 ## NRC Lexicon
 
-```{r}
-nrc_lexicon <- get_sentiments("nrc")
+The nrc lexicon categorizes words in a binary fashion ("yes"/"no") into categories of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust.
 
-# identify words in word_frequencies dataset (which has stop words removed) that are not in the lexicon
-nrc_missed_words <- opinion_word_freqs %>%
-  anti_join(nrc_lexicon, by = "word")
+We plot the top 10 words across all articles from the dataset for each of the following sentiments below. Interestingly, frequently-used words like "elite", "majority", and "pay" are classified under "joy" and words like "income," "vote," and "pandemic" are classified under "sadness." 
 
-# proportion missed
-nrow(nrc_missed_words)/nrow(opinion_word_freqs)
-```
-
-Beware -- over 79% of the words in the Amherst Student articles are not found in the nrc lexicon.
 
 ```{r}
 #top words by sentiment
+nrc_lexicon <- get_sentiments("nrc")
+
 suppressWarnings(nrc_opinions <- opinion_word_freqs %>%
   inner_join(nrc_lexicon, by = "word") %>%
   filter(sentiment %in% c("positive", "negative", "anger", "disgust"
@@ -284,7 +288,7 @@ ggplot(data=nrc_opinions, aes(x = reorder(word,n), y = n, fill = as.factor(n))) 
   coord_flip()
 ```
 
-
+The tables below display the Top 15 most common words in the Opinion articles classified as both "positive" and "negative" by the NRC lexicon. Frequently-used "negative" words include "noise," "lack," and "crisis", and top "positive" words include "community," "culture," and "learning."
 
 ```{r}
 
@@ -295,55 +299,62 @@ suppressMessages(opinions_nrc <- opinions %>%
   anti_join(get_stopwords(), by = "word") %>%
   inner_join(get_sentiments("nrc"), multiple = "all"))
 
-#creating dataset with top30 most frequent words classified as negative
+#creating dataset with top20 most frequent words classified as negative
 nrc_negative <- get_sentiments("nrc") %>% 
   filter(sentiment == "negative")
 
 suppressMessages(opinions_neg <- opinions_nrc %>%
   inner_join(nrc_negative) %>%
   count(word, sort = TRUE) %>%
-  slice(1:30))
+  slice(1:15))
 
-#creating dataset with top30 most frequent words classified as positive
+#creating dataset with top20 most frequent words classified as positive
 nrc_positive <- get_sentiments("nrc") %>% 
   filter(sentiment == "positive")
 
 suppressMessages(opinions_pos <- opinions_nrc %>%
   inner_join(nrc_positive) %>%
   count(word, sort = TRUE) %>%
-  slice(1:30))
+  slice(1:15))
 ```
 
 ```{r}
-#table of top 30 "negative" words
+#table of top 15 "negative" words
 
-kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'negative' in NRC lexicon by frequency") %>%
+kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 15 Words in the Student Opinion articles classified as 'negative' in NRC lexicon by frequency") %>%
   kable_styling(font_size = 8) %>%
   row_spec(0,bold=TRUE) 
 ```
 
 ```{r}
-#table of top 30 "positive" words
+#table of top 15 "positive" words
 
-kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
+kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 20 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
   kable_styling(font_size = 8) %>%
   row_spec(0,bold=TRUE) 
 ```
 
 # Limitations
-The largest limitation to our analysis is perhaps the size of our dataset, which is only 100 articles. The articles only span over the past 9 months, since the start of the 2022-2023 school year. To better examine the breakdown of articles by topic, sentiment, and how sentiment has evolved over time, we would need a much larger database. 
-\n 
+The largest limitation to our analysis is perhaps the size of our dataset, which is only 76 articles. The articles only span over the past 9 months, since the start of the 2022-2023 school year. To better examine the breakdown of articles by topic, sentiment, and how sentiment has evolved over time, we would need a much larger database. 
 
-Another limitation of our analysis is that we only focused on articles from the opinion section of the magazine. The other sections include arts and music, sports, podcasts, and features, meaning these subjects may not appear as frequently in the opinion section. While articles about sports, for example, were not as common in our analysis, readers should not infer this to mean that sports are not frequently written about by Amherst students. 
+\n 
+The other major limitation of our sentiment analysis is the AFINN and NRC lexicons themselves. As mentioned above, over 91% of the words in the policy-related articles were not classified by the AFINN lexicon, and we also found that over 79% of all of the words in the articles (6966/8811) were not classified by the NRC lexicon. All analysis done with unigrams (individual words) also does not account for qualifiers like "not" or "somewhat" used before the words themselves, and some words are classified under a certain positive/negative emotion when they can actually have different connotations based on context (words like elite, important, and culture). In general, the classifcations according to the lexicons appear to lean positive for many terms.
+
+\n
+
+Another limitation of our analysis is that we only focused on articles from the Opinion section of the magazine. The other sections include news, arts and music, sports, and features, meaning these subjects may not appear as frequently in the Opinion section. While articles about sports, for example, were not as common in our analysis, readers should not infer this to mean that sports are not frequently written about by Amherst students. 
+
 \n 
 
 It would be nice to generalize our results to make conclusions about the Amherst population as a whole, however, it is important to note that the Student writers may not be an accurate reflection of the entire student body. For instance, while the most common sentiment score was slightly positive, a different set of writers could write much more positively (or much more negatively). 
+
 \n
 
-limitations of the lexicons?
 
 # References
 <!-- knitr -->
+The Amherst Student Opinion Section (2023). <https://amherststudent.com/section/opinion>
+
 Yihui Xie (2023). knitr: A General-Purpose Package for Dynamic Report Generation in R.
   R package version 1.42.
   
