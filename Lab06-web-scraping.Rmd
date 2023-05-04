@@ -1,0 +1,250 @@
+---
+title: "Web scraping Blog Project"
+author: "Julia Woodward"
+date: "\\today"
+output:
+  pdf_document:
+    toc: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, message = FALSE)
+
+# improve digit and NA display 
+options(scipen = 1, knitr.kable.NA = '')
+
+# load packages
+library(tidyverse)
+library(kableExtra)
+library(rvest)
+```
+
+# Getting set up
+
+1. Before editing this file, verify you are working on the file saved in **your private repo** (and NOT the course-content repo).  
+2. Change your name in the YAML header above.
+
+3. Save (`Cmd + S` on Mac or `Ctrl + S` on PC), view the changes in this Rmd in GitHub Desktop, and commit the initial, incomplete version of the lab (commit message: "Add Lab 6").
+
+4. After committing, go ahead and **Push** your commit back onto GitHub. 
+
+5. Check that your changes updated correctly in your private repo on GitHub.com.
+
+
+# About this lab
+
+Next week we'll be working with Emily Dickinson's poetry to introduce text analysis. In order to bring her poetry into R, we can scrape the poems from Wikipedia. (Perhaps not the most accurate source for her poetry, but a good exercise in web scraping, `for` loops, and algorithmic thinking!)
+
+There is a separate Wikipedia page for each of Dickinson's poems -- she wrote over 1,500! How can we efficiently search across all these pages to get the text from each poem into R? 
+
+We'll first scrape a Wikipedia page that contains a *table* listing links to all her poems. Then we'll use data from that table to loop through each of the linked pages to scrape the *text* of the poems.
+
+The packages for this lab include:
+
+* **tidyverse**, 
+* **rvest** (for general scraping), 
+* **robotstxt** (checking `paths_allowed()`), and 
+* **purrr** (to `pluck()` a single element from a list)
+
+# Review 
+
+```{r, eval = FALSE}
+# 1. Identify page where poem is listed
+#amst_student_url <- "https://amherststudent.com/section/opinion/"
+amst_student_url <- "https://amherststudent.com/article/strict-attendance-policies-do-more-harm-than-good/"
+# 2. Confirm bots are allowed to access the page 
+robotstxt::paths_allowed(amst_student_url)
+
+# 3. Get poem text 
+dear_march <- amst_student_url %>%               
+  read_html() %>%
+  html_elements("p") %>% 
+  html_text2() 
+
+dear_march
+```
+
+
+```{r, eval=FALSE}
+poem_list_url <- "https://amherststudent.com/section/opinion/"
+robotstxt::paths_allowed(poem_list_url)
+
+tables <- poem_list_url %>%
+  read_html() %>%
+  html_nodes("h2")
+
+class(tables)
+tables[[1]]
+
+poem_list <- tables %>%
+  purrr::pluck([[1]]) %>%
+  html_table()
+
+#poem_list <- rename(poem_list, `First Line` = `First Line (often used as title)`)
+poem_list
+```
+
+2. How many Emily Dickinson poems are contained in the list? 
+
+> RESPONSE: 1799 poems
+
+```{r, eval=FALSE}
+length(poem_list$`First Line`)
+```
+
+3. Think about our final goal: a dataframe with the title and text of every poem linked in the table. Broadly speaking, what are the things you need to do to get to our final goal? Don't worry about the specific details yet -- ignore the functions and arguments you'll need in R and don't worry about the particular order of steps (yet). 
+
+> RESPONSE: Need to scrape the text from each poem's url. To do this, we also need to locate each poem's url and put it in a dataframe. 
+
+4. To more efficiently web scrape each poem's Wikipedia page, let's grab the URL links that are embedded in ("hiding" behind) those poem titles. Can you inspect the HTML for the page and/or use SelectorGadget to figure out how to scrape the URLs for each poem in the table? Save the scraped URLs as a dataframe titled `poem_urls` (you can use the `as.data.frame()` function) with one variable called `url`. 
+
+(Note that you could also use the generic code for scraping all URLs on the page; if you do this, then you will need to do some data cleaning after so only the URLs of interest are stored in `poem_urls`. Before resorting to this method, I encourage you to explore trying to identify the relevant items by inspecting the HTML for the page and/or using SelectorGadget first.) 
+
+```{r, eval=FALSE}
+poem_urls <- poem_list_url %>% read_html %>% html_elements(".extiw") %>% html_attr("href")
+#poem_urls
+```
+
+*This is a good place to pause, commit changes with an informative commit message, and push.*
+
+
+\newpage
+# Web scrape text for one poem
+
+5. Web scrape the text for the first poem in the table, *A Bee his burnished Carriage*, following the same code as used to scrape the text for *Dear March — Come in —* (see: the course slides and/or the Review section of this lab). Update the code for assigning the URL object (e.g., `dear_march_url` or `bee_url`) to retrieve it from the `poem_urls` dataframe you created above (instead of writing out the URL explicitly).
+
+```{r, eval=FALSE}
+bee_carriage <- poem_urls[1]
+
+# 2. Confirm bots are allowed to access the page 
+robotstxt::paths_allowed(bee_carriage)
+
+# 3. Get poem text 
+bee_text <- bee_carriage %>%               
+  read_html() %>%
+  html_elements("text") %>% 
+  html_text2() 
+```
+
+*This is a good place to pause, commit changes with an informative commit message, and push.*
+
+\newpage
+# Web scrape text for many poems
+
+6. Iterate to scrape more poems!  
+
+Remember, the final product should be a dataframe with at least two columns: the title of the poem and the text of the poem. To do this, we will pre-allocate space in our data frame (a new column called `text`), and use a `for` loop to iterate through the URLs and fill the `text` column with the poem text as we scrape each poem.
+
+Also remember: **start small and then scale up slowly!** You should develop and test your code on a small subset of pages (e.g., one URL, 5 URLs, 10 URLs, 20 URLs) and check for errors or oddities each time before scaling up a bit more. 
+
+Use the code chunk below to try see if you can (get up to) scrape 20 or so poems without issue.
+
+```{r, eval = FALSE}
+# Identify number of iterations (start with 1, 5, 10, 20)
+n_iter <- 2
+  
+# Pre-allocate new column in dataframe for poem text
+some_poems <- poem_urls %>% 
+  # Limit number of rows since we're not scraping all poems
+  slice(1:n_iter) %>% 
+  # Add currently empty column for poem text (to be filled in as we iterate)
+  mutate(text = "") 
+
+# Iterate through links to grab text
+for (i in seq_len(n_iter)) {
+   # Scrape poem i's text and save it to row i of the `text` variable
+  some_poems$text[i] <- some_poems$url[i] %>%
+  read_html() %>%
+  html_elements("text") %>% 
+  html_text2() 
+    
+}
+```
+
+7. Identify the purpose of the `separate` and `select` functions in the code chunk below. What are they doing?
+
+> RESPOND:
+
+```{r, eval=FALSE}
+my_poems <- some_poems %>%
+  separate(col=text, into=c("first_line", "trash"), sep=c("\n"), remove=FALSE) %>%
+  select(first_line, text)
+```
+
+*This is a good place to pause, commit changes with an informative commit message, and push.*
+
+\newpage
+# Practice the more realistic workflow: use an R script!
+
+8. Yet again, we've been working in an Rmd file to respond to questions that I've provided for you. In practice, we are likely to use an R script rather than an Rmd file to contain all of our scraping and wrangling code. Why? (If you can't remember, refer to the course slides!)
+
+> RESPONSE:
+
+9. When working in an R script, you would begin with a comment describing what the file contains. The remainder of the file would be strictly R code and comments, beginning with loading the necessary packages. When scraping or wrangling, the file usually ends with outputting the saved dataset (e.g., using `save()` to create a .RData file, `saveRDS()` to create a .Rds file, or `write_csv()` to create a CSV).
+
+To practice this setup, do the following:
+
+a. Create a new R Script called *scrape-poems.R* (go to **File**, **New file**, **R Script**).
+
+b. Write a code comment at the top of the R script describing what will be in the file (e.g., `# Code for scraping Emily Dickinson poems from Wikipedia`). 
+
+c. Load the necessary packages at the top of the R script. 
+
+d. Copy your code from the relevant code chunks above and paste it into your R script. 
+
+e. End the script by saving the scraped dataset. 
+
+f. Clear your environment. Run the code in your R script (including saving your data for future use) to make sure it's reproducible! 
+
+*This is a good place to pause, commit changes with an informative commit message, and push.*
+
+\newpage
+# Bonus Challenge
+
+Done Early? See if you can slowly work up to scraping 100 (or all!) of the poems! 
+
+As you are working, you should notice that some links will not work (no poem text on page or the poem needs to be scraped with a different CSS selector).
+
+* *For links without poems*: Typically, when a problem or error is encountered, the `for` loop will quit without producing any output -- this is not ideal! For our poems, this will occur when there is no poem to scrape. We can use `tryCatch()` to produce alternative output when a page doesn't have a poem. This will allow us to continue on to the next link without breaking the `for` loop. For more on `tryCatch()`, check out this chapter on [Handling conditions](https://adv-r.hadley.nz/conditions.html#handling-conditions).
+
+* *For links with poems that require a different selector*: Troubleshoot the page individually to see which CSS selector might be needed, and consider using an [`if { } else { }` flow](https://www.datamentor.io/r-programming/if-else-statement/) to handle the few alternative cases.
+
+Some potentially problematic or wonky poems include:
+
+* *A not admitting of the wound*
+* *Alter! When the Hills do*
+* *I never lost as much but twice*
+* *The Himmaleh was known to stoop*
+* *The Wind begun to knead the Grass —*
+
+It might be helpful to iteratively shift the window of poems "sliced" (e.g., `slice(51:100)`) -- and update the `for` loop indices accordingly -- to see what other types of errors came up. Once you're sure you've accounted for all the different types of errors with URLs or non-existent poems, you can remove the `slice()` part of the pipe. 
+
+Given the number of poems and the delay time between hits to the site, it will take a long time to run the code on the full set of ~1800 links, so don't do that until you are absolutely sure your code is ready.
+
+```{r, eval = FALSE}
+# Identify number of iterations (start with 1, 5, 10, 20, ...)
+n_iter <- 100
+  
+# Pre-allocate new column in dataframe for poem text
+poems <- poem_urls %>% 
+  # Limit number of rows (uncomment  when building loop)
+  slice(1:n_iter) %>% 
+  # Add empty column for poem text (to be filled in as we iterate)
+  mutate(text = "")
+
+# Iterate through links to grab text
+for(i in seq_len(n_iter)){
+
+   # Scrape poem title and text 
+  poems$text[i] <- tryCatch(
+    
+    # Return NA instead of poem text when no poem is scraped
+    error = function(cnd) {
+      return(NA)
+    },
+    
+    # Scrape text otherwise
+    INSERT CODE TO SCRAPE DATA FROM poems$url[i]
+  )
+}
+```
