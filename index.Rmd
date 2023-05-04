@@ -1,5 +1,5 @@
 ---
-title: "Performing Text Analysis on Amherst Student Opinion Articles"
+title: "Performing Text Analysis on Opinion Articles from the Amherst Student"
 author: "Anna Zhou and Julia Woodward"
 date: "May 2, 2023"
 output:
@@ -28,7 +28,7 @@ library(kableExtra)
 
 # Introduction
 
-Amherst students have a wide range of interests, hobbies, and experiences. With a student body of less than 2,000, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities and concerns of the student body? To answer these questions, we analyzed all 76 articles published this school year in the Opinion section of [The Student](https://www.amherststudent.com/), the main student-run magazine at Amherst College. 
+Amherst students have a wide range of interests, hobbies, and experiences. With a student body of less than 2,000, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities and concerns of the student body? To answer these questions, we analyzed all 76 articles published this school year in the Opinion section of [The Student](https://www.amherststudent.com/), the main student-run newspaper at Amherst College. 
 
 The Opinion section spans a large pool of topics, from health, to college policies, to politics. After scraping the text from the Amherst Student Opinion articles webpage and filtering out the illustrations/cartoons, we looked at the breakdown of these articles by subject matter in the headlines, as well as the most common words and phrases referenced in the article bodies. We performed sentiment analysis using both AFINN and NRC lexicons and examined changes in emotion and topics over the past nine months of the school year. 
 
@@ -329,7 +329,7 @@ kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 15 Words 
 ```{r}
 #table of top 15 "positive" words
 
-kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 20 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
+kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 15 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
   kable_styling(font_size = 8) %>%
   row_spec(0,bold=TRUE) 
 ```
