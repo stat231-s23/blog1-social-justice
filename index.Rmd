@@ -4,7 +4,7 @@ author: "Anna Zhou and Julia Woodward"
 date: "May 2, 2023"
 output:
   rmdformats::readthedown:
-    highlight: "kate"
+   highlight: "kate"
 ---
 
 ```{r setup, include = FALSE}
@@ -16,45 +16,36 @@ knitr::opts_chunk$set(echo = FALSE)
 options(knitr.kable.NA = '')
 
 # Load packages
+library(knitr)
 library(tidytext)
 library(tidyverse)
 library(wordcloud)
 library(textdata)
 library(ggplot2)
 library(scales)
-
+library(kableExtra)
 ```
 
 # Intro
 
-This is an R Markdown blog template. This document will be knit to HTML to produce a webpage that will be hosted publicly via GitHub.
+Amherst students have a wide range of interests, hobbies, and experiences. With a student body of only 1600, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities of the student body? To answer these questions, we analyzed 100 articles from the opinion section of [The Student](https://www.amherststudent.com/), the student magazine at Amherst College. The opinion section spans a large pool of topics, from health, to policy, to politics. We looked at the breakdown of these articles by subject matter, as well as the most common words and phrases referenced by these articles. We grouped articles by sentiment and emotion, and noticed changes in these areas over the past 8 months. 
 
-Amherst students have a wide range of interests, hobbies, and experiences. With a student body of only 1600, Amherst prides itself on this diversity. How is this diversity reflected in student writing? And what does this tell us about the priorities of the student body? To answer these questions, we analyzed 100 articles from the opinion section of the Student, the student magazine at Amherst College. The opinion section spans a large pool of topics, from health, to policy, to politics. We looked at the breakdown of these articles by topic, as well as the most common words and phrases referenced by these articles. We grouped articles by sentiment and emotion, and noticed changes in these areas over the past 8 months. 
-
-```{r, fig.cap='"Safe Space" by artist Kenesha Sneed', out.width="80%", fig.align="center"}
-knitr::include_graphics("https://image.isu.pub/230412084223-d3c31359d0485a97f70dadb4de02bfed/jpg/page_1_thumb_large.jpg")
+```{r, fig.cap='Two issues of the Amherst Student from January 1960 (right) and April 2023 (left)', out.width="100%", fig.align="center"}
+knitr::include_graphics("img/amherst_student.jpg")
 ```
 
 
-## Website publication work flow
-
-1. Edit Rmd
-
-2. Knit to HTML to view progress. You may need to click "Open in Browser" for some content to show (sometimes content won't show until you actually push your changes to GitHub and view the published website).
-
-3. Commit and push changes when you are ready. The website may take a couple minutes to update automatically after the push, but you may need to clear your browser's cache or view the page in a private/incognito window to see the changes more quickly. 
 
 
 # Categorizing by Topic
 
-You can include text, `code`, and output as usual. Remember to take full advantage of Markdown and follow our [Style Guide](https://acstat231-f22.github.io/home/style-guide.html#Text_narration).
-
-Our dataset includes 100 articles from the Student, ranging from September 2022 to April 2023. We categorized each article by topic by looking at key words in each title. For example, the "health" category groups articles together that have the words "illness", "health", "ableism", "cancer", or "pandemic" in their title. The "policy" category groups articles that address some college policy, whether it be the open curriculum, the structure of the AAS, or J-term classes, to name a few. We observe that around 10% of the articles address college policy and 10% address politics. Articles about policy and politics are around twice as common as articles about health or finances. Articles about sports are very few, due to there being a separate sports section of the magazine. 
+Our dataset includes 100 articles from the Student, ranging from September 2022 to April 2023. We categorized each article by topic by looking at key words in each title. For example, the "health" category groups articles together that have the words "illness", "health", "ableism", "cancer", or "pandemic" in their title. The "policy" category groups articles that address some college policy, whether it be the open curriculum, the structure of the AAS, or J-term classes, to name a few. We observe that around 10% of the articles address college policy and 10% address politics. Furthermore, articles about policy and politics are around twice as common as articles about health or finances.
 
 These topics are not mutually exclusive; for example, an article about the college's response to covid would be grouped under both "policy" and "health". 
 
 ```{r ggplot-example, fig.align="left", out.width="100%"}
-opinions <- read_csv("data/opinions.csv")
+opinions <- read_csv("data/opinions.csv", show_col_types = FALSE)
+
 Title = opinions %>% select("Title")
 all_words_in_titles <- Title %>%
   unnest_tokens(output = word, input = Title)
@@ -72,7 +63,7 @@ sports <- all_words_in_titles %>% filter(word == "bruce" | word == "badminton")
 topics <- c("policy", "health", "finances", "politics", "sports")
 count <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)), as.numeric(count(sports)))
 title_topics <- data.frame(topics, count)
-title_topics
+kable(title_topics)
 
 ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = topics)) + 
   geom_col() + 
@@ -81,243 +72,275 @@ ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = top
     y = "Number of articles",
     title = "Categorizing The Student articles by Title")
 
-ggplot(data = cars, aes(x = speed, y = dist)) + 
-  geom_point() + 
-  labs(x = "Speed of car (mph)",
-       y = "Distance taken to stop (ft)",
-       title = "Stopping distance increases with faster speeds",
-       subtitle = "Based on 1920s study") +
-  theme_classic()
 ```
 
-Examples and additional guidance are provided below. 
-
-Take note of the the default code chunk options in the `setup` code chunk. For example, unlike the rest of the Rmd files we worked in this semester, the default code chunk option is `echo = FALSE`, so you will need to set `echo  = TRUE` for any code chunks you would like to display in the blog. You should be thoughtful and intentional about the code you choose to display. 
 
 ## Word and Phrase Frequency
 
+What words and phrases are most common in the articles? We can plot the frequency of the most common words in the article bodies, after filtering out the stop-words (as, is, the, etc). "Student/s" and "Amherst" come out on top by a wide margin - no surprises there! "Student" is mentioned almost 400 times in just 100 articles. Other commonly appearing words are "time", "campus", and "college". 
+```{r}
+#finding most common terms in the body section
+Body = opinions %>% select("Body")
+
+all_words_in_body <- Body %>%
+  unnest_tokens(output = word, input = Body)
+
+
+body_words <- all_words_in_body %>% 
+  filter(word != "student"  & word!= "it’s") %>%
+  anti_join(stop_words, by="word")
+
+body_words %>%
+  count(word, sort = TRUE) %>% 
+  slice(1:10) %>%
+  ggplot(aes(x = fct_reorder(word, n), y = n, color = word, fill = word)) +
+  geom_col() +
+  # Rotate graph
+  coord_flip() +
+  guides(color = "none", 
+         fill = "none") +
+  labs(
+    x = NULL,
+    y = "Number of instances",
+    title = "Most common words in Amherst Student Opinion Articles")
+```
+
+```{r}
+#creating word cloud
+
+opinion_word_freqs <- opinions %>%
+  unnest_tokens(output = word, input = Body) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(word != "student" & word != "it’s" & word != "i’m" & word != "don’t" & word != "i’ve") %>%
+  count(word, sort = TRUE)
+
+#setting seed for reproducibility
+set.seed(100)
+
+#choosing color palette
+my_palette <- brewer.pal(10, "Dark2")
+
+opinion_word_freqs %>%
+  with(wordcloud(words = word,
+      freq = n,
+      min.freq = 20,
+      max.words = 50,
+    # Plot the words in a random order
+      random.order = TRUE,
+    # Specify the range of the size of the words
+      scale = c(2, 0.3),
+# Specify proportion of words with 90 degree rotation 
+      rot.per = 0.15,
+# Color words from least to most frequent
+      colors = my_palette,
+# Change font family
+      family = "sans"))
+```
+
+We also looked at the most common bigrams, or two word phrases, in the Student. The three most common bigrams are "Student body", "latin honors", and "mental health". This is in agreement with Figure 1, which illustrates that policy and health lie among the most common article topics. 
+
+```{r}
+#finding most common bigrams (2-term phrases)
+#creating bigram token 
+opinions_bigrams <- Body %>%
+  unnest_tokens(output = bigram, input = Body, token = "ngrams", n = 2)
+
+opinions_bigrams_clean <- opinions_bigrams %>%
+  separate(col="bigram", into=c("word1", "word2"), sep=" ", remove=FALSE) %>%
+  anti_join(stop_words, by=c("word1"="word")) %>%
+  anti_join(stop_words, by=c("word2"="word")) %>%
+  filter(!is.na(bigram)) %>%
+  #removing irrelevant/uninformative bigrams
+  filter((!grepl("amherst|editorial board|email protected|articles comment|emailing email", bigram))) %>%
+  count(bigram, sort = TRUE) %>%
+  slice(1:10)
+
+#plotting most common bigrams
+ggplot(opinions_bigrams_clean, aes(x = fct_reorder(bigram, n), y = n
+                                , color = bigram, fill = bigram)) +
+geom_col() +
+# Rotate graph 
+  coord_flip() + guides(color = "none",
+         fill = "none") +
+  labs(
+x = NULL,
+    y = "Number of instances",
+    title = "Most common bigrams in Amherst Student Opinion articles")
+```
+
 # Categorizing by Sentiment and Emotion
+
+We also analyzed the overall sentiment of these articles, and how this has changed over time. Has student writing become more positive or negative over the past 9 months?
+
 ## AFINN Lexicon
-## NRC Lexicon 
-## Links 
 
-You can include [links](https://www.datadreaming.org/post/r-markdown-theme-gallery/) using Markdown syntax as shown. 
+The AFINN Lexicon assigns each word or term a value, or "sentiment score" from -5 to 5, with 5 being the most positive. The table below shows that most terms in the articles are neutral to slightly positive.  
+```{r}
+afinn_lexicon <- get_sentiments("afinn")
 
-You should include links to relevant sites as you write. You should additionally include a list of references as the end of your blog with full citations (and relevant links).
+#creating dataset using afinn lexicon grouped by date
+suppressMessages(opinion_afinn <- opinions %>%
+  unnest_tokens(word, Body) %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  inner_join(get_sentiments("afinn")))
 
+#getting word count for each sentiment value (-5 to 5)
+opinion_afinn_count <- opinion_afinn %>%
+  count(value)
 
-## Visualizations 
+#displaying table
+kable(opinion_afinn_count)
 
-Visualizations, particularly interactive ones, will be well-received. That said, do not overuse visualizations. You may be better off with one complicated but well-crafted visualization as opposed to many quick-and-dirty plots. Any plots should be well-thought-out, properly labeled, informative, and visually appealing.
+#displaying barplot
+ggplot(opinion_afinn_count, aes(x = value, y = n, fill = value)) +
+  geom_col() +
+  labs(
+    x = "Sentiment",
+    y = "Number of words in Student Opinion Articles",
+    title = "Sentiment value according to AFINN Lexicon")
+```
+Over time, there appears to be no drastic change in overall sentiment. Overall sentiment peaked at the end of the fall semester in December, which had sentiment scores of around 300. During the Spring semester, however, the sentiment seemed to be growing more negative. Of course, more significant conclusions would require a much larger dataset.
+```{r}
+#plotting graph of sentiment in articles over time
+opinion_narrative <- opinion_afinn %>%
+  group_by(Date) %>%
+  summarize(sentiment = sum(value))
+  
+ggplot(opinion_narrative, aes(x = Date, y = sentiment)) + 
+  geom_point() + 
+  scale_x_date(breaks = date_breaks("months"), labels = date_format("%B")) +
+  geom_smooth() +  
+  labs(title = "Sentiment in The Student Over Time by Issue Release Date Using AFINN Lexicon", subtitle = ("9/14/2022 - 4/26/2023"))
+```
 
-If you want to include dynamic visualizations or tables, you should explore your options from packages that are built from [**htmlwidgets**](https://www.htmlwidgets.org/showcase_leaflet.html). These **htmlwidgets**-based packages offer ways to build lighterweight, dynamic visualizations or tables that don't require an R server to run! A more complete list of packages is available on the linked website, but a short list includes:
+```{r}
+# overall sentiment score
+opinion_afinn %>%
+  summarize(total_score = sum(value))
 
-* [**plotly**](https://plot.ly/r/): Interactive graphics with D3
-* [**leaflet**](https://rstudio.github.io/leaflet/): Interactive maps with OpenStreetMap
-* [**dygraphs**](http://rstudio.github.io/dygraphs): Interactive time series visualization
-* [**visNetwork**](http://dataknowledge.github.io/visNetwork): Network graph visualization vis.js
-* [**sparkline**](https://github.com/htmlwidgets/sparkline): Small inline charts
-* [**threejs**](https://github.com/bwlewis/rthreejs): Interactive 3D graphics
-    
-You may embed a published Shiny app in your blog if useful, but be aware that there is a limited window size for embedded objects, which tends to makes the user experience of the app worse relative to a dedicated Shiny app page. Additionally, Shiny apps will go idle after a few minutes and have to be reloaded by the user, which may also affect the user experience. 
+# by article
+afinn_byarticles <- opinion_afinn %>%
+  group_by(Title) %>%
+  summarize(article_score = sum(value))
+ggplot(data = afinn_byarticles, aes(x = article_score)) +
+  geom_density(color="#AF7AC5", fill="#AF7AC5", alpha = 0.5) +
+  theme_classic() +
+  labs(title = "Total Article Sentiment Score based on AFINN Lexicon", x = "Article Sentiment Score")
+```
 
-Any Shiny apps embedded in your blog should be accompanied by the link to the published Shiny app (I did this using a figure caption in the code chunk below, but you don't have to incorporate the link in this way).
+```{r}
+# overall favstats by article -- median of 29 is positive
+mosaic::favstats(~article_score, data=afinn_byarticles)
+```
 
-```{r ds-salaries-app, out.width = "100%", out.extra = 'data-external="1" frameborder="no"', fig.cap = "[Data Science Salaries Shiny App](https://bebailey.shinyapps.io/data-science-salaries)"}
-knitr::include_app("https://bebailey.shinyapps.io/data-science-salaries",
-                   height = "500px")
+```{r}
+#AFINN sentiment for articles about Amherst policies
+
+policy_words <- opinions %>%
+  filter(str_detect(str_to_lower(Title), "policy|policies|financial aid|curriculum|case|fee|requirements|tuition|ableism")) %>%
+  unnest_tokens(output=word, input=Body, token="words") %>%
+  anti_join(stop_words, by="word") %>%
+  inner_join(afinn_lexicon, by="word") %>%
+  group_by(Title) %>%
+  mutate(seq=row_number())
+
+ggplot(policy_words, aes(x=seq, y=value)) +
+  geom_line() +
+  geom_hline(yintercept=0, lty="dashed", color="red") +
+  facet_wrap(~Title, labeller = labeller(Title = label_wrap_gen(width = 23))) +
+  labs(x="Order", y="AFINN Sentiment")
+```
+
+## NRC Lexicon
+
+```{r}
+nrc_lexicon <- get_sentiments("nrc")
+
+# identify words in word_frequencies dataset (which has stop words removed) that are not in the lexicon
+nrc_missed_words <- opinion_word_freqs %>%
+  anti_join(nrc_lexicon, by = "word")
+
+# proportion missed
+nrow(nrc_missed_words)/nrow(opinion_word_freqs)
+```
+
+Beware -- over 79% of the words in the Amherst Student articles are not found in the nrc lexicon.
+
+```{r}
+#top words by sentiment
+nrc_opinions <- opinion_word_freqs %>%
+  inner_join(nrc_lexicon, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative", "anger", "disgust"
+                          , "joy", "sadness")) %>%
+  arrange(sentiment, desc(n)) %>%
+  group_by(sentiment) %>%
+  slice(1:10)
+
+#plotting top 10 words under each sentiment
+ggplot(data=nrc_opinions, aes(x = reorder(word,n), y = n, fill = as.factor(n))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "Frequency") +
+  facet_wrap(~ sentiment, ncol = 2, scales = "free") +
+  coord_flip()
 ```
 
 
-## Tables
 
-### **DT** package
+```{r}
 
-The [**DT** package](https://rstudio.github.io/DT/) is great for making dynamic tables that can be displayed, searched, and filtered by the user without needing an R server or Shiny app!
+suppressMessages(opinions_nrc <- opinions %>%
+  unnest_tokens(word, Body) %>%
+  #removing most common irrelevant/incorrectly classified words
+  filter(word != "liberal" & word != "rail" & word != "anonymous" & word != "pay" & word != "president" & word != "question" & word != "library") %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  inner_join(get_sentiments("nrc"), multiple = "all"))
 
-Note: you should load any packages you use in the `setup` code chunk as usual. The `library()` functions are shown below just for demonstration.
+#creating dataset with top30 most frequent words classified as negative
+nrc_negative <- get_sentiments("nrc") %>% 
+  filter(sentiment == "negative")
 
-```{r dt-example, message=FALSE, echo=TRUE}
-library(DT)
-mtcars %>% 
-  select(mpg, cyl, hp) %>% 
-  datatable(colnames = c("MPG", "Number of cylinders", "Horsepower"),
-            filter = 'top',
-            options = list(pageLength = 10, autoWidth = TRUE))
+suppressMessages(opinions_neg <- opinions_nrc %>%
+  inner_join(nrc_negative) %>%
+  count(word, sort = TRUE) %>%
+  slice(1:30))
+
+#creating dataset with top30 most frequent words classified as positive
+nrc_positive <- get_sentiments("nrc") %>% 
+  filter(sentiment == "positive")
+
+suppressMessages(opinions_pos <- opinions_nrc %>%
+  inner_join(nrc_positive) %>%
+  count(word, sort = TRUE) %>%
+  slice(1:30))
 ```
 
-### **kableExtra** package
+```{r}
+#table of top 30 "negative" words
 
-You can also use [**kableExtra**](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html) for customizing HTML tables.
-
-```{r kable-example, echo=TRUE, message=FALSE}
-library(kableExtra)
-summary(cars) %>%
-  kbl(col.names = c("Speed", "Distance"),
-      row.names = FALSE) %>%
-  kable_styling(bootstrap_options = "striped",
-                full_width = FALSE) %>%
-  row_spec(0, bold = TRUE) %>%
-  column_spec(1:2, width = "1.5in") 
+kable(opinions_neg, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'negative' in NRC lexicon by frequency") %>%
+  kable_styling(font_size = 8) %>%
+  row_spec(0,bold=TRUE) 
 ```
 
+```{r}
+#table of top 30 "positive" words
 
-## Images
-
-Images and gifs can be displayed using code chunks:
-
-```{r, fig.cap='"Safe Space" by artist Kenesha Sneed', out.width="80%", fig.align="center"}
-knitr::include_graphics("img/Kenesha-Sneed_safe-space.jpeg")
+kable(opinions_pos, col.names = c("Word", "Frequency"), caption = "Top 30 Words in the Student Opinion articles classified as 'positive' in NRC lexicon by frequency") %>%
+  kable_styling(font_size = 8) %>%
+  row_spec(0,bold=TRUE) 
 ```
 
+# Limitations
+The largest limitation to our analysis is perhaps the size of our dataset, which is only 100 articles. The articles only span over the past 9 months, since the start of the 2022-2023 school year. To better examine the breakdown of articles by topic, sentiment, and how sentiment has evolved over time, we would need a much larger database. 
+\n 
 
-```{r, fig.cap="This is a figure caption", out.width="50%", fig.align="center"}
-knitr::include_graphics("https://media.giphy.com/media/H7ZrrA9V2pd3Tehdds/giphy.gif")
-```
+Another limitation of our analysis is that we only focused on articles from the opinion section of the magazine. The other sections include arts and music, sports, podcasts, and features, meaning these subjects may not appear as frequently in the opinion section. While articles about sports, for example, were not as common in our analysis, readers should not infer this to mean that sports are not frequently written about by Amherst students. 
+\n 
 
-You may also use Markdown syntax for displaying images as shown below, but code chunks offer easier customization of the image size and alignment.
+It would be nice to generalize our results to make conclusions about the Amherst population as a whole, however, it is important to note that the Student writers may not be an accurate reflection of the entire student body. For instance, while the most common sentiment score was slightly positive, a different set of writers could write much more positively (or much more negatively). 
+\n
 
-![This is another figure caption](https://media.giphy.com/media/8i5IvxP9ZLgmjXN1BF/giphy.gif)
-
-Either way, the file path can be a local path within your project directory or a URL for an image hosted online. This syntax works for PNG, PDF, JPG, and even GIF formats.
-
-
-## Videos
-
-You can use code chunks or Markdown syntax include links to any valid YouTube or Vimeo URLs (see [here](https://bookdown.org/yihui/rmarkdown/learnr-videos.html) for details) or point to a location within your project directory. 
-
-Code chunk:
-
-```{r, out.width="80%", fig.align="center"}
-knitr::include_url("https://www.youtube.com/watch?v=up8ODGFWgFg")
-```
-
-Markdown syntax:
-
-![](https://www.youtube.com/watch?v=up8ODGFWgFg){width="90%"}
-
-
-You may need to push your updates to GitHub to see if the videos work.
-
-
-
-
-## Equations
-
-You might include equations if part of the purpose of your blog is to explain a statistical method. There are two ways to include equations:
-
-* Inline: $b \sim N(0, \sigma^2_b)$
-* Display-style (displayed on its own line): 
-$$\frac{\sigma^2_b}{\sigma^2_b + \sigma^2_e}$$
-
-For typesetting equations appropriately, check out the [AMS-LaTeX quick reference](https://github.com/manuelemacchia/math-latex/blob/master/amsmath.pdf) or take a look at the *Symbols in math mode* section of this  [cheat sheet](https://users.dickinson.edu/~richesod/latex/latexcheatsheet.pdf)  (or do some extra Googling---there are *many* resources).
-
-
-
-# Formatting
-
-## Tabbed subsections {.tabset}
-
-Each subsection below the "Tabbed subsections" section heading will appear in a tab. See R Markdown Cookbook [Section 7.6: Put content in tabs](https://bookdown.org/yihui/rmarkdown-cookbook/html-tabs.html) for additional customization options. 
-
-### Bulleted list
-
-You can make a bulleted list like this:
-
-* item 1
-* item 2
-* item 3
-
-
-### Numbered list
-
-
-You can make a numbered list like this
-
-1. First thing I want to say
-2. Second thing I want to say
-3. Third thing I want to say
-
-
-
-## Column formatting
-
-<!-- Begin columns environment -->
-:::::: {style="display: flex; font-size: large;"}
-
-<!-- Create a column -->
-::: {}
-### Content Column 1
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel ipsum eu sem facilisis porttitor. Integer eu tristique lectus. Vestibulum nisi risus, porta sit amet cursus nec, auctor ac tellus. Integer egestas viverra rhoncus. Fusce id sem non ante vestibulum posuere ac sed lorem. Proin id felis a mi pellentesque viverra in at nulla. Duis augue nulla, aliquet ac ligula a, sagittis varius lorem.
-
-
-
-:::
-
-<!-- Create another column (this one is just adding horizontal space to separate content) -->
-::: {}
-<div class="horizontalgap" style="width:60px"></div>
-:::
-
-<!-- Create another column -->
-::: {}
-
-### Content Column 2
-
-Aliquam non ante et erat luctus hendrerit eu ac justo. Fusce lacinia pulvinar neque non laoreet. Fusce vitae mauris pharetra, scelerisque purus eget, pharetra nisl. Aenean volutpat elementum tortor vitae rhoncus. Phasellus nec tellus euismod neque congue imperdiet tincidunt in mauris. Morbi eu lorem molestie, hendrerit lorem nec, semper massa. Sed vulputate hendrerit ex, eget cursus purus. Pellentesque consequat erat leo, eleifend porttitor lacus porta at. Vivamus faucibus quam ipsum, id condimentum ligula malesuada ultrices. Nullam luctus leo elit, vitae rutrum nibh venenatis eget. Nam at sodales purus. Proin nulla tellus, lacinia eget pretium sed, vehicula aliquet neque. Morbi vel eros elementum, suscipit elit eu, consequat libero. Nulla nec aliquet neque. Nunc bibendum sapien lectus, sed elementum nisi rutrum non. Ut vulputate at lacus eget maximus.
-
-```{r, out.width="80%", fig.align="right"}
-mtcars %>% 
-  ggplot(aes(x = wt, y = mpg)) +
-  geom_point()
-```
-
-:::
-::::::
-<!-- End columns environment with matching length indicator-->
-
-
-
-
-# Customizing your blog design
-
-
-As a *final* detail **only** if you have time, you can explore options for customizing the style of your blog. By default, we are using the `readthedown` theme from the [**rmdformats** package](https://github.com/juba/rmdformats) (see Line 6 of this file if you want to switch out themes).
-
-
-## Theme
-You can use the [**rmdformats** package](https://github.com/juba/rmdformats) to play around with some pre-built themes. There are, I'm sure, many many many more similar packages with built in themes, or you can look into how to include a CSS code chunk to customize aspects of a theme.  
-
-Using the **rmdformats** package, you can change the theme itself (Line 6): 
-
-* `rmdformats::readthedown`
-* `rmdformats::downcute` 
-  * For `downcute` only, you can add a new indented line below Line 6 with the code `downcute_theme: "chaos"` for the `downcute chaos` theme
-* `rmdformats::robobook` 
-* `rmdformats::material`
-
-You can explore additional YAML options by looking at the [**rmdformats** package](https://github.com/juba/rmdformats) page or running, for example, `?rmdformats::readthedown()` to see the help documentation for a particular theme from the package. 
-
-## Synax highlighting
-
-You can also change the code chunk syntax highlighting option (Line 7, `highlight`): 
-
-* `"default"`
-* `"tango"`
-* `"pygments"`
-* `"kate"`
-* `"monochrome"`
-* `"espresso"`
-* `"zenburn"`
-* `"haddock"`
-* `"textmate"` 
-* `NULL` for no syntax highlighting (not recommended)
-
-## Font size, type, and other customization
-
-Further customization requires adding a CSS style file or code chunk or incorporating other development options. Customization beyond the **rmdformats** package should be your lowest and final priority for the project. Ensure your content is fully prepared first.
-
+limitations of the lexicons?
 
 # References
 
