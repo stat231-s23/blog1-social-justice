@@ -61,8 +61,8 @@ politics <- all_words_in_titles %>% filter(word == "macro-" | word == "tragedy" 
 sports <- all_words_in_titles %>% filter(word == "bruce" | word == "badminton")
 
 topics <- c("policy", "health", "finances", "politics", "sports")
-count <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)), as.numeric(count(sports)))
-title_topics <- data.frame(topics, count)
+`Number of Articles` <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)), as.numeric(count(sports)))
+title_topics <- data.frame(topics, `Number of Articles`)
 kable(title_topics)
 
 ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = topics)) + 
@@ -71,7 +71,7 @@ ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = top
     x = "Topics",
     y = "Number of articles",
     subtitle = "September 2022 to April 2023",
-    title = "Categorizing The Student Article Titles by Topic")
+    title = "Figure 1: Categorizing The Student Article Titles by Topic")
 
 ```
 
@@ -104,7 +104,7 @@ body_words %>%
     x = NULL,
     y = "Number of instances",
     subtitle = "September 2022 to April 2023",
-    title = "Most common words in Amherst Student Opinion Articles")
+    title = "Figure 2: Most common words in Amherst Student Opinion Articles")
 ```
 
 ```{r, fig.cap= 'Word cloud of the 50 most common words in The Student Opinion articles', out.width="100%", fig.align="center"}
@@ -139,7 +139,7 @@ opinion_word_freqs %>%
       family = "sans"))
 ```
 
-We also looked at the most common bigrams, or two-word phrases, in the articles. The three most common bigrams are "Student body", "latin honors", and "mental health". This is in agreement with Figure 1, which illustrates that college community policies and health lie among the most common article topics that Amherst students feel most compelled to write about. In this past year in particular, changes to the Latin honors breadth requirement and its effect on Amherst's open curriculum were widely written about. Other timely article topics that we saw from our word cloud and the plot below included changes to the Association of Amherst Students (AAS) and the increased budgetary/financial limitations Amherst has experienced over the past semester. Also, related bigrams like "dining hall", "financial aid", and "western Massachusetts" appear to all be topics of relevance to the current Amherst student body.
+We also looked at the most common bigrams, or two-word phrases, in the articles. The three most common bigrams are "Student body", "latin honors", and "mental health". This is in agreement with the table above, which illustrates that college community policies and health lie among the most common article topics that Amherst students feel most compelled to write about. In this past year in particular, changes to the Latin honors breadth requirement and its effect on Amherst's open curriculum were widely written about. Other timely article topics that we saw from our word cloud and the plot below included changes to the Association of Amherst Students (AAS) and the increased budgetary/financial limitations Amherst has experienced over the past semester. Also, related bigrams like "dining hall", "financial aid", and "western Massachusetts" appear to all be topics of relevance to the current Amherst student body.
 
 ```{r}
 #finding most common bigrams (2-term phrases)
@@ -176,7 +176,7 @@ We also analyzed the overall sentiment of these articles, and how this has chang
 
 ## AFINN Lexicon
 
-The AFINN Lexicon assigns each word or term a value, or "sentiment score" from -5 to 5, with 5 being the most positive sentiment and -5 being the most negative sentiment. Scores with a greater magnitude indicate stronger sentiment. The table below shows that most terms in the articles are classified by the lexicon as neutral to slightly positive.  
+The AFINN Lexicon assigns each word or term a value, or "sentiment score" from -5 to 5, with 5 being the most positive sentiment and -5 being the most negative sentiment. The table below shows that most terms in the articles are classified by the lexicon as neutral to slightly positive.  
 
 ```{r}
 afinn_lexicon <- get_sentiments("afinn")
@@ -204,7 +204,7 @@ ggplot(opinion_afinn_count, aes(x = value, y = n, fill = value)) +
 ```
 
 
-Below, we grouped the sentiment scores by article. The table reveals that the median score of 29 reveals that the average sentiment of the Opinion articles is generally neutral to positive, with a quarter of articles having total sentiment scores of 8.75 or below (slightly positive to negative)and a quarter having scores of 76 or above (positive to very positive). The article with the most negative sentiment of -91 is titled "Under the Rubble: A Tragedy Reveals Cultural Bias" and discusses Amherst's failure to address and provide support for the February 2023 earthquakes in Syria and  Türkiye. The article with the most positive sentiment score of 132 is titled "Val for Pal: How To Maintain Your Long-distance Friendship" and offers advice on cultivating worldwide/long-distance friendships from the perspective of an international student. It seems like some particularly positive articles (sentiment >90) are driving the overall score to lean positive.
+Below, we grouped the sentiment scores by article. The median score of 29 in Table 2 reveals that the average sentiment of the Opinion articles is generally neutral to positive, with a quarter of articles having total sentiment scores of 8.75 or below (slightly positive to negative)and a quarter having scores of 76 or above (positive to very positive). The article with the most negative sentiment of -91 is titled "Under the Rubble: A Tragedy Reveals Cultural Bias" and discusses Amherst's failure to address and provide support for the February 2023 earthquakes in Syria and  Türkiye. The article with the most positive sentiment score of 132 is titled "Val for Pal: How To Maintain Your Long-distance Friendship" and offers advice on cultivating worldwide/long-distance friendships from the perspective of an international student. It seems like some particularly positive articles (sentiment >90) are driving the overall score to lean positive.
 
 ```{r}
 # by article
