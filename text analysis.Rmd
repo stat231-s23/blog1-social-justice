@@ -238,7 +238,7 @@ ggplot(policy_words, aes(x=seq, y=value)) +
   geom_line() +
   geom_hline(yintercept=0, lty="dashed", color="red") +
   facet_wrap(~Title, labeller = labeller(Title = label_wrap_gen(width = 23))) +
-  labs(x="Order", y="AFINN Sentiment")
+  labs(x="Word Sequence", y="AFINN Sentiment")
 ```
 
 ```{r}
@@ -295,7 +295,6 @@ ggplot(data=nrc_opinions, aes(x = reorder(word,n), y = n, fill = as.factor(n))) 
   facet_wrap(~ sentiment, ncol = 2, scales = "free") +
   coord_flip()
 ```
-
 
 
 ```{r}
