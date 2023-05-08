@@ -44,8 +44,10 @@ Our dataset includes 76 articles from the Student, ranging from September 2022 t
 These topics are not mutually exclusive; for example, an article about the college's response to COVID-19 would be grouped under both "policy" and "health". 
 
 ```{r ggplot-example, fig.align="left", out.width="100%"}
+#reading in dataset
 opinions <- read_csv("data/opinions.csv", show_col_types = FALSE)
 
+#making categories for article topics
 Title = opinions %>% select("Title")
 all_words_in_titles <- Title %>%
   unnest_tokens(output = word, input = Title)
@@ -60,11 +62,13 @@ politics <- all_words_in_titles %>% filter(word == "macro-" | word == "tragedy" 
 
 sports <- all_words_in_titles %>% filter(word == "bruce" | word == "badminton")
 
+#making table of category frequency
 topics <- c("policy", "health", "finances", "politics", "sports")
 count <- c(as.numeric(count(policy)), as.numeric(count(health)), as.numeric(count(finances)), as.numeric(count(politics)), as.numeric(count(sports)))
 title_topics <- data.frame(topics, count)
 kable(title_topics, caption = "Table 1: Breakdown of The Student articles by topic")
 
+#making barplot of category frequency
 ggplot(data = title_topics, aes(x= topics, y = count, color = topics, fill = topics)) + 
   geom_col() + 
   labs(
@@ -207,7 +211,7 @@ ggplot(opinion_afinn_count, aes(x = value, y = n, fill = value)) +
 Below, we grouped the sentiment scores by article. The density plot conveys the probability that an article has a certain sentiment score. The median score of 29 in Table 3 reveals that the average sentiment of the Opinion articles is generally neutral to positive, with a quarter of articles having total sentiment scores of 8.75 or below (slightly positive to negative)and a quarter having scores of 76 or above (positive to very positive). The article with the most negative sentiment of -91 is titled "Under the Rubble: A Tragedy Reveals Cultural Bias" and discusses Amherst's failure to address and provide support for the February 2023 earthquakes in Syria and  Türkiye. The article with the most positive sentiment score of 132 is titled "Val for Pal: How To Maintain Your Long-distance Friendship" and offers advice on cultivating worldwide/long-distance friendships from the perspective of an international student. It seems like some particularly positive articles (sentiment >90) are driving the overall score to lean positive.
 
 ```{r}
-# by article
+# making density plot of afinn scores by article
 afinn_byarticles <- opinion_afinn %>%
   group_by(Title) %>%
   summarize(article_score = sum(value))
