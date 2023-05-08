@@ -255,7 +255,7 @@ ggplot(policy_words, aes(x=seq, y=value)) +
   geom_line() +
   geom_hline(yintercept=0, lty="dashed", color="red") +
   facet_wrap(~Title, labeller = labeller(Title = label_wrap_gen(width = 23))) +
-  labs(x="Order", y="AFINN Sentiment", title = "Sentiment in Opinion Articles About Amherst Policies")
+  labs(x="Word Sequence", y="AFINN Sentiment", title = "Sentiment in Opinion Articles About Amherst Policies")
 
 
 ```
